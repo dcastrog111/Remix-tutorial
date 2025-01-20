@@ -39,7 +39,7 @@ export default function Contact() {
         {contact.twitter ? (
           <p>
             <a
-              href={`https://twitter.com/${contact.twitter}`}
+              href={`https://instagram.com/${contact.twitter}`}
             >
               {contact.twitter}
             </a>

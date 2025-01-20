@@ -36,7 +36,7 @@ export default function App() {
       </head>
       <body>
         <div id="sidebar">
-          <h1>Remix Contacts</h1>
+          <h1>Academy Award for Best Picture</h1>
           <div>
             <Form id="search-form" role="search">
               <input
