@@ -67,7 +67,7 @@ export default function Contact() {
             method="post"
             onSubmit={(event) => {
               const response = confirm(
-                "Please confirm you want to delete this record."
+                "¿Está seguro de eliminar el elemento?"
               );
               if (!response) {
                 event.preventDefault();
