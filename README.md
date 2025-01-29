@@ -58,55 +58,59 @@ Se usa para que un componente tenga rutas diferentes de acuerdo a una variable. 
 ```sh
 app/routes/contacts.$contactId.tsx
 ```
-## Loader
-Se usa para recuperar y cargar datos en los componentes. En el archivo root.tsx se debe:
-- Importa la función useLoaderData
+## validación de parámetros con invariant
+Para la validación de los parametros se puede usar la función invariant, la cual tiene dos parámetros, una condición y un mensaje, si la condición resulta falsa durante la ejecución del código se muestra el mensaje.
+- Importar la función
+  
+```sh
+import invariant from "tiny-invariant";
+```
+- Declarar la función invariant en la función loader o action
+
+```sh
+invariant(params.contactId, "Missing contactId param");
+```
+
+## Loader y useLoaderData
+Se usa para recuperar datos de una API y renderizar los datos en los componentes.
+- Importa la función useLoaderData y LoaderFunctionArgs
   
 ```sh
 import {useLoaderData} from "@remix-run/react";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 ```
-- Crear la función loader para recuperar los datos del componente data.ts, se llama a la función tipo get getContacts allí definida
+- Exportar la función loader para recuperar los datos del componente data.ts, se llama a la función tipo get getContacts allí definida
 
 ```sh
-export const loader = async () => {
-  const contacts = await getContacts();
-  return json({ contacts });
-};
-```
-- En la función default App se crea un array para almacenar toda la data recuperada.
-
-```sh
-const { contacts } = useLoaderData<typeof loader>();
-```
-- En el body (navbar) se usa este array para listar cada uno de sus elementos y se utiliza la etiqueta Link para configurar la URL dinámica, con el id de cada componente del array se crea la parte dinamica de la ruta
-
-```sh
-{contacts.length ? (
-              <ul>
-                {contacts.map((contact) => (
-                  <li key={contact.id}>
-                    <Link to={`contacts/${contact.id}`}>
-                      {contact.first || contact.last ? (
-                        <>
-                          {contact.first} {contact.last}
-                        </>
-                      ) : (
-                        <i>No Name</i>
-                      )}{" "}
-                      {contact.favorite ? (
-                        <span>★</span>
-                      ) : null}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-)
-```
-- Para que la data que se renderice al hacer clic en cada elemento de la lista sea dinámica, se debe en el componente contacts.$contactId.tsx importar la función useLoaderData y crear una función loader con parámetro. Este  params.contactId que se envía a la función get corresponde a la parte dinámica de la URL, la función getContact recupera de data el objeto que coincide con el id. 
-
-```sh
-export const loader = async ({ params }) => {
+export const loader = async ({params,}: LoaderFunctionArgs) => {
   const contact = await getContact(params.contactId);
   return json({ contact });
 };
 ```
+- Al argumento de la función loader se le asigna el tipo LoaderFunctionArgs, el cual es un objeto que tiene como una de sus propiedades params (parametros de la ruta)
+- Los datos obtenidos se guardan en un json para luego ser recuperados y renderizados con el hook useLoaderData. Este hook permite acceder a la información cargada por el loader.
+
+```sh
+const { contacts } = useLoaderData<typeof loader>();
+```
+## Action
+Se usa para recuperar la información que se ingresa en la vizualización de un componente.(Por ejemplo en un formulario)
+
+- Importa ActionFunctionArgs
+  
+```sh
+import type { ActionFunctionArgs } from "@remix-run/node";
+```
+- Exportar la función Action para capturar los datos ingresados por el usuario y en este ejemplo actualizar la información del contacto.
+
+```sh
+export const action = async ({params,request,}: ActionFunctionArgs) => {
+    const formData = await request.formData();
+    const updates = Object.fromEntries(formData);
+    await updateContact(params.contactId, updates);
+    return redirect(`/contacts/${params.contactId}`);
+  };
+```
+- A los argumentos de la función Action se le asigna el tipo ActionFunctionArgs, y a diferencia de loader no solo se le envía params sino tambien request que hace referencia al tipo de solicitud HTTP que se va a realizar.
+- Con el método formData se recupera la infromación digitada en el formulario y luego se almacena en un objeto con los datos organizados en clave-valor.
+- Finalmente se hace el llamado a la función updateContact y se envía los datos para su actualización. 
